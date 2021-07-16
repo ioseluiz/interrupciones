@@ -1,5 +1,7 @@
 import sys
 
+from simulacion import Simulacion
+
 from PyQt5 import QtGui
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QPixmap
@@ -127,8 +129,8 @@ class MainWindow(QMainWindow):
         
         lbl_duracion = QLabel('Duracion del Programa ')
         grid_layout.addWidget(lbl_duracion,0, 0)
-        self.txt_duracion = QLineEdit()
-        grid_layout.addWidget(self.txt_duracion, 0, 1)
+        self.txt_duracion_programa = QLineEdit()
+        grid_layout.addWidget(self.txt_duracion_programa, 0, 1)
         lbl_tiempo_inicio = QLabel('Tiempo de Inicio ')
         grid_layout.addWidget(lbl_tiempo_inicio, 1, 0)
         self.txt_tiempo_inicio = QLineEdit()
@@ -165,8 +167,8 @@ class MainWindow(QMainWindow):
         self.btn_reiniciar = QPushButton('Reiniciar\n Programa')
         simulacion_grid.addWidget(self.btn_reiniciar, 0, 0)
         self.btn_ejecutar = QPushButton('Ejecutar\n Simulacion')
+        self.btn_ejecutar.clicked.connect(self.ejecutar_simulacion)
         simulacion_grid.addWidget(self.btn_ejecutar, 0, 2)
-
         layout_left.addLayout(layout_titulo)
         layout_left.addWidget(layout_opciones)
         layout_left.addWidget(layout_peticiones)
@@ -224,7 +226,16 @@ class MainWindow(QMainWindow):
         return _prioridad
 
     def ejecutar_simulacion(self):
-        pass
+        # Lectura de datos ingresados
+        duracion_programa = self.txt_duracion_programa.text()
+        tiempo_inicio_programa = self.txt_tiempo_inicio.text()
+
+        datos = {
+            'duracion_programa': duracion_programa,
+            'tiempo_inicio_programa': tiempo_inicio_programa
+        }
+
+        simulacion = Simulacion(datos)
 
 
 
