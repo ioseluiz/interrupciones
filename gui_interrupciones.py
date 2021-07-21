@@ -155,6 +155,7 @@ class MainWindow(QMainWindow):
         self.btn_agregar_peticion = QPushButton("Agregar\n Peticion")
         peticiones_grid.addWidget(self.btn_agregar_peticion, 2, 0)
         self.btn_agregar_peticion.setFixedSize(QSize(110,60))
+
         self.btn_agregar_peticion.clicked.connect(self.agregar_peticion)
         self.table_interrupciones = QTableWidget()
         self.table_interrupciones.setRowCount(0)
@@ -225,6 +226,23 @@ class MainWindow(QMainWindow):
                 return _prioridad
         return _prioridad
 
+    def leer_tabla(self):
+        # cantidad de dispositivos
+        filas = self.table_interrupciones.rowCount()
+        print(f'Existen {filas} en la tabla')
+        # Lectura de elementos en la tabla
+        datos_tabla = []
+        for fila in range(filas):
+            dispositivo = {
+                'tiempo_inicio': self.table_interrupciones.item(fila,0).text(),
+                'nombre': self.table_interrupciones.item(fila,1).text(),
+                'duracion': self.table_interrupciones.item(fila,2).text(),
+                'prioridad': self.table_interrupciones.item(fila,3).text()
+                }
+            datos_tabla.append(dispositivo)
+
+        return datos_tabla
+
     def ejecutar_simulacion(self):
         # Lectura de datos ingresados
         duracion_programa = self.txt_duracion_programa.text()
@@ -234,12 +252,8 @@ class MainWindow(QMainWindow):
             'duracion_programa': duracion_programa,
             'tiempo_inicio_programa': tiempo_inicio_programa
         }
-
-        simulacion = Simulacion(datos)
-
-
-
-
+        datos_tabla = self.leer_tabla()
+        simulacion = Simulacion(datos, datos_tabla)
 
 
 
