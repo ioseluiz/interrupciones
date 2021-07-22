@@ -23,9 +23,76 @@ from PyQt5.QtWidgets import(
                             QTableWidgetItem
 )
 
+class ResultadosWindow(QWidget):
+    def __init__(self,programa, dispositivos):
+        super().__init__()
+        self.programa = programa # Objeto Programa
+        self.dispositivos = dispositivos # lista de objetos dispositivo
+
+        # columnas = cant_dispositivos + programa
+        columnas = len(dispositivos) + 1
+        listado_dispositivos = ['Programa']
+        for dispositivo in dispositivos:
+            listado_dispositivos.append(dispositivo.nombre)
+
+        layout = QVBoxLayout()
+
+        self.lbl_titulo = QLabel('Bitacora de Control de Procesos')
+        layout.addWidget(self.lbl_titulo)
+        self.table_bitacora = QTableWidget()
+        self.table_bitacora.setRowCount(0)
+        self.table_bitacora.setColumnCount(columnas)
+        self.table_bitacora.setHorizontalHeaderLabels(listado_dispositivos)
+        layout.addWidget(self.table_bitacora)
+
+        # Impresion de bitacoras en la 
+        # Filas Tabla
+        filas_dispositivos = self.max_elementos_bitacora()
+        filas_programa = len(programa.bitacora)*2
+        filas_tabla = max(filas_dispositivos, filas_programa)
+        self.table_bitacora.setRowCount(filas_tabla)
+        # Bitacora de Programa
+        contador = 0
+        for bitacora in programa.bitacora:
+            self.table_bitacora.setItem(2* contador, 0, QTableWidgetItem(f"T = {bitacora['tiempo_inicio']}"))
+            self.table_bitacora.setItem(2* contador + 1 , 0, QTableWidgetItem(f"T = {bitacora['tiempo_end']}  ({bitacora['duracion']} seg)"))
+            contador += 1
+
+        columna = 1
+        for dispositivo in dispositivos:
+            contador = 0
+            for bitacora in dispositivo.bitacora:
+                self.table_bitacora.setItem(2*contador,columna, QTableWidgetItem(f"T = {bitacora['tiempo_inicio']}"))
+                self.table_bitacora.setItem(2*contador+1,columna,QTableWidgetItem(f"T = {bitacora['tiempo_end']}  ({bitacora['duracion']} seg)"))
+                contador += 1
+            columna += 1
+
+
+        width = 500
+        height = 640
+
+        self.setFixedWidth(width)
+        self.setFixedHeight(height)
+
+        self.setLayout(layout)
+
+    def max_elementos_bitacora(self):
+        maximo = 0
+        for dispositivo in self.dispositivos:
+            cantidad = len(dispositivo.cola)*2
+            if maximo <= cantidad:
+                maximo = cantidad
+        return maximo
+
+
+        
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.w = None # No hay ventana secundaria de resultados todavia
 
         self.dispositivos = [
             {
@@ -63,6 +130,10 @@ class MainWindow(QMainWindow):
             },
             {
                 'dispositivo':'Canal IDE Primario',
+                'prioridad':9
+            },
+            {
+                'dispositivo':'Disco',
                 'prioridad':9
             },
             {
@@ -254,6 +325,10 @@ class MainWindow(QMainWindow):
         }
         datos_tabla = self.leer_tabla()
         simulacion = Simulacion(datos, datos_tabla)
+
+        if self.w is None:
+            self.w = ResultadosWindow(simulacion.programa,simulacion.dispositivos)
+            self.w.show()
 
 
 
