@@ -6,7 +6,7 @@ class Simulacion():
         print(datos_tabla)
 
         # Creacion de Objetos Programa
-        self.programa = Programa(self.datos['tiempo_inicio_programa'],self.datos['duracion_programa'],20)
+        self.programa = Programa(self.datos['tiempo_inicio_programa'],self.datos['duracion_programa'],40)
         
         # Cantidad de Peticiones no repetidas
         self.listado_peticiones_unicas = self.get_interrupciones_unicas(self.datos_tabla) # diccionario
@@ -41,21 +41,38 @@ class Simulacion():
         indice_interrupcion = 0
 
         while self.programa.duracion >= 0:
+            print(self.tiempo)
+            if proceso_actual == self.programa:
+                print(proceso_actual)
+            else:
+                print(proceso_actual.dispositivo.nombre)
             indice_interrupcion = self.buscar_tiempo(self.tiempo)
             if indice_interrupcion != "":
-                #Cambiar Proceso por inicio de interrupcion
-                if proceso_actual == self.programa:
-                    self.addBitacora(proceso_actual,self.tiempo_start, self.tiempo)
-                else:
-                    self.addBitacora(proceso_actual.dispositivo,self.tiempo_start, self.tiempo)
-                # Enviar a cola el tiempo que falta
-                if proceso_actual == self.programa:
-                    self.addCola(proceso_actual,proceso_actual.duracion)
+                #Revisar si hay algun proceso en cola de mayor prioridad
+                interrupcion_actual = self.cambiar_proceso(indice_interrupcion)
+                proceso_cola =self.cambiar_prioridad(self.tiempo, interrupcion_actual)
+                if interrupcion_actual == proceso_cola:
+                    #Cambiar Proceso por inicio de interrupcion
+                    if proceso_actual == self.programa:
+                        self.addBitacora(proceso_actual,self.tiempo_start, self.tiempo)
+                    else:
+                        self.addBitacora(proceso_actual.dispositivo,self.tiempo_start, self.tiempo)
+                    # Enviar a cola el tiempo que falta
+                    if proceso_actual == self.programa:
+                        self.addCola(proceso_actual,proceso_actual.duracion)
+                    else:
+                        self.addCola(proceso_actual.dispositivo,proceso_actual.duracion)
+                    proceso_actual = interrupcion_actual
+                    #Actualizar tiempo de inicio
+                    self.tiempo_start = self.tiempo
                 else:
                     self.addCola(proceso_actual.dispositivo,proceso_actual.duracion)
-                proceso_actual = self.cambiar_proceso(indice_interrupcion)
-                #Actualizar tiempo de inicio
-                self.tiempo_start = self.tiempo
+                    self.addBitacora(proceso_actual.dispositivo,self.tiempo_start, self.tiempo)
+                    proceso_actual = proceso_cola
+                    #Actualizar tiempo de inicio
+                    self.tiempo_start = self.tiempo
+                    
+                   
             if proceso_actual.duracion == 0:
                 # Cambiar de Proceso por finalizacion de Proceso  usar prioridades Ver Prioridad)
                 #Actualizar tiempo de inicio
@@ -69,8 +86,8 @@ class Simulacion():
                     self.addCola(proceso_actual,proceso_actual.duracion)
                 else:
                     self.addCola(proceso_actual.dispositivo,proceso_actual.duracion)
-                proceso_actual = self.cambiar_prioridad(self.tiempo)
-                self.tiempo_start = self.tiempo
+                    proceso_actual = self.cambiar_prioridad(self.tiempo, self.programa)
+                    self.tiempo_start = self.tiempo
                 #print(proceso_actual)
             self.tiempo += 1
             proceso_actual.duracion -= 1
@@ -87,35 +104,39 @@ class Simulacion():
             print(f"BITACORA {dispositivo.nombre}\n")
             print(dispositivo.cola)
 
-    def cambiar_prioridad(self,tiempo_actual):
-        elemento_actual = self.programa
+        
+
+    def cambiar_prioridad(self,tiempo_actual, proceso):
+        elemento_actual = proceso
         # Obterner prioridad de programa
-        prioridad_programa = self.programa.prioridad
+        if elemento_actual == self.programa:
+            prioridad = elemento_actual.prioridad
+        else:
+            prioridad = elemento_actual.dispositivo.prioridad
 
         # Buscar interrupciones con tiempos de inicio menores al tiempo actual y duraciones mayor a cero
         lista_dispositivos_cola = []
         for interrupcion in self.interrupciones:
             if (interrupcion.tiempo_inicio < tiempo_actual and interrupcion.duracion > 0):
                 lista_dispositivos_cola.append(interrupcion)
-        if tiempo_actual == 28:
-            print('tiempo 28')
-            print(lista_dispositivos_cola[0].dispositivo.nombre)
+        if tiempo_actual == 17:
+            print('tiempo 17')
+            print(elemento_actual.dispositivo.nombre)
 
         if lista_dispositivos_cola:
             # Usar el que tenga menor prioridad
-            prioridad = lista_dispositivos_cola[0].dispositivo.prioridad
+            #prioridad = lista_dispositivos_cola[0].dispositivo.prioridad
             for interrupcion in lista_dispositivos_cola:
                 if interrupcion.dispositivo.prioridad <= prioridad:
                     prioridad = interrupcion.dispositivo.prioridad
                     elemento_actual = interrupcion
-            if tiempo_actual == 28:
-                print('tiempo 28')
-                print(elemento_actual)
+            if tiempo_actual == 17:
+                print('tiempo 17')
+                print(elemento_actual.dispositivo.nombre)
             return elemento_actual
 
         else:
             return elemento_actual
-
 
 
     def buscar_tiempo(self,tiempo):

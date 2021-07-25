@@ -258,6 +258,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QtGui.QIcon('chip.ico'))
         self.setWindowTitle('Programa de Interrupciones')
 
+                   
         widget = QWidget()
         widget.setLayout(layout)
 
@@ -282,6 +283,8 @@ class MainWindow(QMainWindow):
         prioridad = self.get_prioridad(peticion)
         print(prioridad)
         self.table_interrupciones.setItem(filas-1, 3, QTableWidgetItem(str(prioridad)))
+
+        self.limpiar_textos()
 
     def get_lista_dispositivos(self):
         lista = []
@@ -329,6 +332,10 @@ class MainWindow(QMainWindow):
         if self.w is None:
             self.w = ResultadosWindow(simulacion.programa,simulacion.dispositivos)
             self.w.show()
+
+    def limpiar_textos(self):
+        self.txt_duracion.setText("")
+        self.txt_tiempo.setText("")
 
 
 
