@@ -45,6 +45,21 @@ class ResultadosWindow(QWidget):
         self.table_bitacora.setHorizontalHeaderLabels(listado_dispositivos)
         layout.addWidget(self.table_bitacora)
 
+        #Tabla para imprimir la cola de procesos pendientes
+        self.lbl_cola = QLabel('Cola de Procesos Pendientes')
+        layout.addWidget(self.lbl_cola)
+        self.table_cola = QTableWidget()
+        self.table_cola.setRowCount(0)
+        self.table_cola.setColumnCount(0)
+        layout.addWidget(self.table_cola)
+        
+
+
+        # Boton para cerrar la ventana
+        self.btn_close = QPushButton("Cerrar")
+        self.btn_close.clicked.connect(self.cerrar_ventana)
+        layout.addWidget(self.btn_close)
+
         # Impresion de bitacoras en la 
         # Filas Tabla
         filas_dispositivos = self.max_elementos_bitacora()
@@ -67,8 +82,38 @@ class ResultadosWindow(QWidget):
                 contador += 1
             columna += 1
 
+        # Impresion de colas en la tabla
+        # Contabilizar los dispositivos con valores en la cola de pendientes
+        # filas
+        filas = len(dispositivos) + 1 # dispositivos + programa
+        self.table_cola.setRowCount(filas)
+        columnas = len(programa.cola) + 1
+        self.table_cola.setColumnCount(columnas)
+        self.table_cola.setItem(0,0,QTableWidgetItem('Programa'))
+        contador = 1
+        for elemento in programa.cola:
+            self.table_cola.setItem(0, contador, QTableWidgetItem(f"{elemento}"))
+            contador += 1
+        # Listar los dispositivos en su fila
+        counter = 1
+        for dispositivo in dispositivos:
+            self.table_cola.setItem(counter,0, QTableWidgetItem(f"{dispositivo.nombre}"))
+            # Listar los valores en cola de cada dispositivo
+            counter_cola = 1
+            for elemento in dispositivo.cola:
+                if elemento !=  0:
+                    self.table_cola.setItem(counter,counter_cola, QTableWidgetItem(f"{elemento}"))
+                    counter_cola += 1
+            counter += 1
+        
+        
 
-        width = 500
+            
+
+
+
+
+        width = 600
         height = 640
 
         self.setFixedWidth(width)
@@ -83,6 +128,9 @@ class ResultadosWindow(QWidget):
             if maximo <= cantidad:
                 maximo = cantidad
         return maximo
+
+    def cerrar_ventana(self):
+        self.close()
 
 
         
@@ -237,6 +285,7 @@ class MainWindow(QMainWindow):
         layout_right.addWidget(self.table_interrupciones)
 
         self.btn_reiniciar = QPushButton('Reiniciar\n Programa')
+        self.btn_reiniciar.clicked.connect(self.reiniciar_programa)
         simulacion_grid.addWidget(self.btn_reiniciar, 0, 0)
         self.btn_ejecutar = QPushButton('Ejecutar\n Simulacion')
         self.btn_ejecutar.clicked.connect(self.ejecutar_simulacion)
@@ -318,6 +367,7 @@ class MainWindow(QMainWindow):
         return datos_tabla
 
     def ejecutar_simulacion(self):
+        self.w = None # No hay ventana secundaria de resultados todavia
         # Lectura de datos ingresados
         duracion_programa = self.txt_duracion_programa.text()
         tiempo_inicio_programa = self.txt_tiempo_inicio.text()
@@ -333,9 +383,25 @@ class MainWindow(QMainWindow):
             self.w = ResultadosWindow(simulacion.programa,simulacion.dispositivos)
             self.w.show()
 
+        else:
+            self.w.close()
+            self.w = None # Discard reference, close window
+
     def limpiar_textos(self):
         self.txt_duracion.setText("")
         self.txt_tiempo.setText("")
+
+    def reiniciar_programa(self):
+        #limpiar datos de entrada
+        self.txt_duracion_programa.setText("")
+        self.txt_duracion.setText("")
+        self.txt_tiempo.setText("")
+        self.txt_tiempo_inicio.setText("")
+
+        # Limpieza de la tabla_interrupciones
+        self.table_interrupciones.setRowCount(0)
+
+
 
 
 

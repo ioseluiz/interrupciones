@@ -140,9 +140,9 @@ class Simulacion():
         for interrupcion in self.interrupciones:
             if (interrupcion.tiempo_inicio < tiempo_actual and interrupcion.duracion > 0):
                 lista_dispositivos_cola.append(interrupcion)
-        if tiempo_actual == 17:
-            print('tiempo 17')
-            print(elemento_actual.dispositivo.nombre)
+        #if tiempo_actual == 17:
+            #print('tiempo 17')
+            #print(elemento_actual.dispositivo.nombre)
 
         if lista_dispositivos_cola:
             # Usar el que tenga menor prioridad
@@ -151,9 +151,9 @@ class Simulacion():
                 if interrupcion.dispositivo.prioridad <= prioridad:
                     prioridad = interrupcion.dispositivo.prioridad
                     elemento_actual = interrupcion
-            if tiempo_actual == 17:
-                print('tiempo 17')
-                print(elemento_actual.dispositivo.nombre)
+            # tiempo_actual == 17:
+                #print('tiempo 17')
+                #print(elemento_actual.dispositivo.nombre)
             return elemento_actual
 
         else:
