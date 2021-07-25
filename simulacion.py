@@ -46,14 +46,20 @@ class Simulacion():
                 print(proceso_actual)
             else:
                 print(proceso_actual.dispositivo.nombre)
+
             indice_interrupcion = self.buscar_tiempo(self.tiempo)
             if indice_interrupcion != "":
                 #Revisar si hay algun proceso en cola de mayor prioridad
                 interrupcion_actual = self.cambiar_proceso(indice_interrupcion)
-                proceso_cola =self.cambiar_prioridad(self.tiempo, interrupcion_actual)
-                if interrupcion_actual == proceso_cola:
+                # proceso_actual
+                revision_prioridad = self.revisar_prioridad(proceso_actual, interrupcion_actual)
+                # Verificar que la interrupcion actual puede detener al proceso
+                # = self.cambiar_prioridad(self.tiempo, interrupcion_actual)
+
+                if interrupcion_actual == revision_prioridad:
                     #Cambiar Proceso por inicio de interrupcion
                     if proceso_actual == self.programa:
+
                         self.addBitacora(proceso_actual,self.tiempo_start, self.tiempo)
                     else:
                         self.addBitacora(proceso_actual.dispositivo,self.tiempo_start, self.tiempo)
@@ -66,11 +72,12 @@ class Simulacion():
                     #Actualizar tiempo de inicio
                     self.tiempo_start = self.tiempo
                 else:
-                    self.addCola(proceso_actual.dispositivo,proceso_actual.duracion)
-                    self.addBitacora(proceso_actual.dispositivo,self.tiempo_start, self.tiempo)
-                    proceso_actual = proceso_cola
+                    #self.addCola(proceso_actual.dispositivo,proceso_actual.duracion)
+                    self.addCola(interrupcion_actual.dispositivo,interrupcion_actual.duracion)
+                    #.addBitacora(proceso_actual.dispositivo,self.tiempo_start, self.tiempo)
+                    #proceso_actual = proceso_cola
                     #Actualizar tiempo de inicio
-                    self.tiempo_start = self.tiempo
+                    #self.tiempo_start = self.tiempo
                     
                    
             if proceso_actual.duracion == 0:
@@ -101,10 +108,24 @@ class Simulacion():
         print('COLA PROGRAMA')
         print(self.programa.cola)
         for dispositivo in self.dispositivos:
-            print(f"BITACORA {dispositivo.nombre}\n")
+            print(f"COLA {dispositivo.nombre}\n")
             print(dispositivo.cola)
 
+    def revisar_prioridad(self, proceso1, proceso2):
+        if proceso1 == self.programa:
+            proceso1_prioridad = proceso1.prioridad
+        else:
+            proceso1_prioridad = proceso1.dispositivo.prioridad
         
+        if proceso2 == self.programa:
+            proceso2_prioridad = proceso2.prioridad
+        else:
+            proceso2_prioridad = proceso2.dispositivo.prioridad
+
+        if proceso1_prioridad <= proceso2_prioridad:
+            return proceso1
+        else:
+            return proceso2
 
     def cambiar_prioridad(self,tiempo_actual, proceso):
         elemento_actual = proceso
