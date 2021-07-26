@@ -52,7 +52,7 @@ class ResultadosWindow(QWidget):
 
         # columnas = cant_dispositivos + programa
         columnas = len(dispositivos) + 1
-        listado_dispositivos = ['Programa']
+        listado_dispositivos = ['programa']
         for dispositivo in dispositivos:
             listado_dispositivos.append(dispositivo.nombre)
 
@@ -82,26 +82,28 @@ class ResultadosWindow(QWidget):
         layout.addWidget(self.btn_close)
 
         # Impresion de bitacoras en la 
+        bitacoras_all = self.merge_bitacoras()
+        #print(bitacoras_all)
         # Filas Tabla
-        filas_dispositivos = self.max_elementos_bitacora()
-        filas_programa = len(programa.bitacora)*2
-        filas_tabla = max(filas_dispositivos, filas_programa)
+        #filas_dispositivos = self.max_elementos_bitacora()
+        #filas_programa = len(programa.bitacora)*2
+        filas_tabla = len(bitacoras_all) + 1
         self.table_bitacora.setRowCount(filas_tabla)
         # Bitacora de Programa
         contador = 0
-        for bitacora in programa.bitacora:
-            self.table_bitacora.setItem(2* contador, 0, QTableWidgetItem(f"T = {bitacora['tiempo_inicio']}"))
-            self.table_bitacora.setItem(2* contador + 1 , 0, QTableWidgetItem(f"T = {bitacora['tiempo_end']}  ({bitacora['duracion']} seg)"))
+        for bitacora in bitacoras_all:
+            self.table_bitacora.setItem(contador, listado_dispositivos.index(bitacora['proceso']), QTableWidgetItem(f"T = {bitacora['tiempo_inicio']}"))
+            self.table_bitacora.setItem(contador + 1 , listado_dispositivos.index(bitacora['proceso']), QTableWidgetItem(f"T = {bitacora['tiempo_end']}  ({bitacora['duracion']} seg)"))
             contador += 1
 
-        columna = 1
-        for dispositivo in dispositivos:
-            contador = 0
-            for bitacora in dispositivo.bitacora:
-                self.table_bitacora.setItem(2*contador,columna, QTableWidgetItem(f"T = {bitacora['tiempo_inicio']}"))
-                self.table_bitacora.setItem(2*contador+1,columna,QTableWidgetItem(f"T = {bitacora['tiempo_end']}  ({bitacora['duracion']} seg)"))
-                contador += 1
-            columna += 1
+        #columna = 1
+        #for dispositivo in dispositivos:
+            # = 0
+            #for bitacora in dispositivo.bitacora:
+                #self.table_bitacora.setItem(2*contador,columna, QTableWidgetItem(f"T = {bitacora['tiempo_inicio']}"))
+                #self.table_bitacora.setItem(2*contador+1,columna,QTableWidgetItem(f"T = {bitacora['tiempo_end']}  ({bitacora['duracion']} seg)"))
+                #contador += 1
+            #columna += 1
 
         # Impresion de colas en la tabla
         # Contabilizar los dispositivos con valores en la cola de pendientes
@@ -129,13 +131,42 @@ class ResultadosWindow(QWidget):
             counter += 1
 
 
-        width = 600
+        width = 700
         height = 640
 
         self.setFixedWidth(width)
         self.setFixedHeight(height)
 
         self.setLayout(layout)
+
+    def merge_bitacoras(self):
+        bitacoras = []
+        for bitacora in self.programa.bitacora:
+            datos = {
+                'tiempo_inicio': int(bitacora['tiempo_inicio']),
+                'tiempo_end': int(bitacora['tiempo_end']),
+                'duracion': int(bitacora['duracion']),
+                'proceso': 'programa'
+            }
+            bitacoras.append(datos)
+       
+
+        for dispositivo in self.dispositivos:
+            #(dispositivo.bitacora)
+            for bitacora in dispositivo.bitacora:
+                datos = {
+                'tiempo_inicio': int(bitacora['tiempo_inicio']),
+                'tiempo_end': int(bitacora['tiempo_end']),
+                'duracion': int(bitacora['duracion']),
+                'proceso': dispositivo.nombre
+                }
+                bitacoras.append(datos)
+
+        bitacoras = sorted(bitacoras, key = lambda i: i['tiempo_inicio'])
+        #print(len(bitacoras))
+
+        return bitacoras
+
 
     def max_elementos_bitacora(self):
         maximo = 0
@@ -226,7 +257,7 @@ class MainWindow(QMainWindow):
         ]
 
         lista_dispositivos = self.get_lista_dispositivos()
-        print(lista_dispositivos)
+        #print(lista_dispositivos)
 
         layout = QGridLayout()
         layout_left = QVBoxLayout()
@@ -249,7 +280,7 @@ class MainWindow(QMainWindow):
         layout_simulacion.setLayout(simulacion_grid)
 
 
-        lbl_titulo = QLabel('Interrupciones')
+        lbl_titulo = QLabel('GRUPO #4')
         lbl_titulo.setFixedSize(QSize(100,20))
         layout_titulo.addWidget(lbl_titulo)
         lbl_logo = QLabel('Hola')
@@ -428,6 +459,11 @@ class MainWindow(QMainWindow):
                 'prioridad': self.table_interrupciones.item(fila,3).text()
                 }
             datos_tabla.append(dispositivo)
+
+        # Ordenar la lista de diccionarios datos_tabla en funcion del tiempo
+        #datos_tabla = sorted(datos_tabla, key = lambda i: i['tiempo_inicio'])
+        #print('DATOS TABLA')
+        #print(datos_tabla)
 
         return datos_tabla
 
