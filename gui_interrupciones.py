@@ -4,7 +4,7 @@ from simulacion import Simulacion
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIntValidator
 from PyQt5.QtWidgets import(
                             QApplication,
                             QMainWindow,
@@ -20,8 +20,29 @@ from PyQt5.QtWidgets import(
                             QComboBox,
                             QGroupBox,
                             QHeaderView,
-                            QTableWidgetItem
+                            QTableWidgetItem,
+                            QDialogButtonBox
 )
+
+class CustomDialog(QDialog):
+    def __init__(self,titulo,mensaje):
+        super().__init__()
+
+        self.setWindowTitle(titulo)
+
+        QBtn = QDialogButtonBox.Ok
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.cerrar_ventana)
+
+        self.layout = QVBoxLayout()
+        lbl_mensaje = QLabel(mensaje)
+        self.layout.addWidget(lbl_mensaje)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+
+    def cerrar_ventana(self):
+        self.close()
 
 class ResultadosWindow(QWidget):
     def __init__(self,programa, dispositivos):
@@ -92,8 +113,9 @@ class ResultadosWindow(QWidget):
         self.table_cola.setItem(0,0,QTableWidgetItem('Programa'))
         contador = 1
         for elemento in programa.cola:
-            self.table_cola.setItem(0, contador, QTableWidgetItem(f"{elemento}"))
-            contador += 1
+            if elemento != 0:
+                self.table_cola.setItem(0, contador, QTableWidgetItem(f"{elemento}"))
+                contador += 1
         # Listar los dispositivos en su fila
         counter = 1
         for dispositivo in dispositivos:
@@ -105,12 +127,6 @@ class ResultadosWindow(QWidget):
                     self.table_cola.setItem(counter,counter_cola, QTableWidgetItem(f"{elemento}"))
                     counter_cola += 1
             counter += 1
-        
-        
-
-            
-
-
 
 
         width = 600
@@ -134,13 +150,12 @@ class ResultadosWindow(QWidget):
 
 
         
-
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.w = None # No hay ventana secundaria de resultados todavia
+        self.w = None # No hay ventana secundaria de resultados 
+        self.q = None
 
         self.dispositivos = [
             {
@@ -249,15 +264,18 @@ class MainWindow(QMainWindow):
         lbl_duracion = QLabel('Duracion del Programa ')
         grid_layout.addWidget(lbl_duracion,0, 0)
         self.txt_duracion_programa = QLineEdit()
+        self.txt_duracion_programa.setValidator(QIntValidator())
         grid_layout.addWidget(self.txt_duracion_programa, 0, 1)
         lbl_tiempo_inicio = QLabel('Tiempo de Inicio ')
         grid_layout.addWidget(lbl_tiempo_inicio, 1, 0)
         self.txt_tiempo_inicio = QLineEdit()
+        self.txt_tiempo_inicio.setValidator(QIntValidator())
         grid_layout.addWidget(self.txt_tiempo_inicio,1,1)
 
         lbl_tiempo = QLabel('Tiempo ')
         peticiones_grid.addWidget(lbl_tiempo, 0, 0)
         self.txt_tiempo = QLineEdit()
+        self.txt_tiempo.setValidator(QIntValidator())
         peticiones_grid.addWidget(self.txt_tiempo,1, 0)
         lbl_peticion = QLabel('Peticion')
         peticiones_grid.addWidget(lbl_peticion, 0, 1)
@@ -267,8 +285,10 @@ class MainWindow(QMainWindow):
         lbl_duracion = QLabel('Duracion')
         peticiones_grid.addWidget(lbl_duracion, 0, 2)
         self.txt_duracion = QLineEdit()
+        self.txt_duracion.setValidator(QIntValidator())
         peticiones_grid.addWidget(self.txt_duracion, 1, 2)
         self.btn_eliminar_peticion = QPushButton("Eliminar\n Peticion\n Seleccionada")
+        self.btn_eliminar_peticion.clicked.connect(self.eliminar_fila_seleccionada)
         peticiones_grid.addWidget(self.btn_eliminar_peticion, 2, 2)
         self.btn_eliminar_peticion.setFixedSize(QSize(110,60))
         self.btn_agregar_peticion = QPushButton("Agregar\n Peticion")
@@ -314,13 +334,30 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def agregar_peticion(self):
+
+        # Validacion de datos
+        blanco = self.validacion_blank(self.txt_tiempo.text())
+        if blanco == 'si':
+            return
+
+        blanco = self.validacion_blank(self.txt_duracion.text())
+        if blanco == 'si':
+            return
+
+
+        numerico = self.validacion_numeric(self.txt_tiempo.text())
+        if numerico == 'si':
+            return
+        
+        numerico = self.validacion_numeric(self.txt_duracion.text())
+        if numerico == 'si':
+            return
+        
         # Lectura de Datos
         tiempo = self.txt_tiempo.text()
-        print(tiempo)
         peticion = self.cbo_peticion.currentText()
-        print(peticion)
         duracion = self.txt_duracion.text()
-
+            
         #Agregar en tabla la informacion
          # Imprimir resultados en Table
         filas = (self.table_interrupciones.rowCount() + 1)
@@ -334,6 +371,34 @@ class MainWindow(QMainWindow):
         self.table_interrupciones.setItem(filas-1, 3, QTableWidgetItem(str(prioridad)))
 
         self.limpiar_textos()
+
+    def show_dialog_error(self,titulo, mensaje):
+        dlg = CustomDialog(titulo, mensaje)
+        return dlg
+
+    def validacion_blank(self,texto):
+        if (texto == ""):
+            if self.q is None:
+                self.q = self.show_dialog_error('Error de Validación','No se puede dejar el campo sin llenar')
+                self.q.show()
+            else:
+                self.q.close()
+                self.q = None # Discard reference, close window
+            return "si"
+        return "no"
+
+    def validacion_numeric(self,texto):
+        if (texto.isdecimal() is False):
+            if self.q is None:
+                self.q = self.show_dialog_error('Error de Validación','Solamente se admiten numeros')
+                self.q.show()
+            else:
+                self.q.close()
+                self.q = None # Discard reference, close window
+            return
+
+        
+
 
     def get_lista_dispositivos(self):
         lista = []
@@ -400,6 +465,10 @@ class MainWindow(QMainWindow):
 
         # Limpieza de la tabla_interrupciones
         self.table_interrupciones.setRowCount(0)
+
+    def eliminar_fila_seleccionada(self):
+        self.table_interrupciones.removeRow(self.table_interrupciones.currentRow())
+        
 
 
 
